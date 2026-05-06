@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skysense — Incidencias Operativas</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0D1B2A; --accent:#2E86C1; --light-blue:#AED6F1; --white:#F8FBFE;
+  --gray:#6C757D; --red:#C0392B; --yellow:#F39C12; --green:#1E8449;
+  --border:#2C4E6A; --input-bg:#111F2E; --card-bg:#142232; --tag-bg:#1A3248;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Syne',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;}
+
+/* ── HEADER ── */
+header{background:var(--navy);border-bottom:2px solid var(--border);padding:0 40px;display:flex;align-items:stretch;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.logo{display:flex;align-items:center;gap:16px;padding:14px 0;}
+.logo-mark{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#2E86C1,#1B4F72);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 12px rgba(46,134,193,.4);}
+.logo-text{}
+.logo-text .company{font-size:20px;font-weight:800;letter-spacing:-0.5px;color:var(--white);}
+.logo-text .subtitle{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gray);letter-spacing:1px;text-transform:uppercase;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.hstat{background:var(--tag-bg);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;min-width:70px;}
+.hstat .hn{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;line-height:1;}
+.hstat .hl{font-size:10px;color:var(--gray);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.hstat.accent .hn{color:var(--accent);}
+.hstat.red .hn{color:#E74C3C;}
+.hstat.orange .hn{color:#E67E22;}
+.hstat.blue .hn{color:#5DADE2;}
+.hstat.green .hn{color:#27AE60;}
+.date-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gray);padding:0 16px;border-left:1px solid var(--border);margin-left:6px;display:flex;align-items:center;}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:2px solid var(--border);padding:0 40px;background:var(--navy);}
+.tab{padding:13px 22px;cursor:pointer;font-size:13px;font-weight:700;color:var(--gray);letter-spacing:.5px;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap;}
+.tab:hover{color:var(--white);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* ── PANELS ── */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── DASHBOARD ── */
+.dash{padding:28px 40px;}
+.dash-title{font-size:11px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:2px;color:var(--gray);margin-bottom:20px;}
+.counter-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px;}
+.counter-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:22px 20px;position:relative;overflow:hidden;}
+.counter-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.counter-card.c-total::before{background:var(--accent);}
+.counter-card.c-proc::before{background:#5DADE2;}
+.counter-card.c-det::before{background:#E74C3C;}
+.counter-card.c-sol::before{background:#27AE60;}
+.counter-card.c-alta::before{background:#E67E22;}
+.counter-card .cv{font-size:42px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1;}
+.counter-card .cl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-top:6px;}
+.counter-card .cs{font-size:11px;font-family:'IBM Plex Mono',monospace;margin-top:4px;}
+.c-total .cv{color:var(--accent);} .c-proc .cv{color:#5DADE2;} .c-det .cv{color:#E74C3C;} .c-sol .cv{color:#27AE60;} .c-alta .cv{color:#E67E22;}
+.counter-card .icon-bg{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:48px;opacity:.07;}
+
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+.dash-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.dash-card h3{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--light-blue);margin-bottom:16px;}
+
+/* Recent tickets list */
+.recent-list{display:flex;flex-direction:column;gap:8px;}
+.recent-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--input-bg);border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.recent-item:hover{background:rgba(46,134,193,.1);border-color:rgba(46,134,193,.3);}
+.ri-code{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;min-width:80px;}
+.ri-info{flex:1;}
+.ri-site{font-size:12px;font-weight:700;}
+.ri-sys{font-size:11px;color:var(--gray);}
+.ri-badge{flex-shrink:0;}
+.ri-days{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gray);min-width:34px;text-align:right;}
+
+/* Quick action bar */
+.quick-bar{display:flex;gap:10px;margin-bottom:22px;}
+.quick-btn{padding:10px 20px;border-radius:8px;border:1px solid var(--border);background:var(--tag-bg);color:var(--white);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;}
+.quick-btn:hover{background:var(--accent);border-color:var(--accent);}
+.quick-btn.primary{background:var(--accent);border-color:var(--accent);}
+.quick-btn.primary:hover{background:#1a6fa3;}
+
+/* ── FORM ── */
+.form-wrap{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 118px);}
+.form-panel{background:var(--card-bg);border-right:2px solid var(--border);padding:24px;overflow-y:auto;}
+.form-panel h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.form-panel h2::after{content:'';flex:1;height:1px;background:var(--border);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--light-blue);margin-bottom:5px;font-family:'IBM Plex Mono',monospace;}
+.field label .req{color:var(--red);}
+.field input,.field select,.field textarea{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--white);font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(46,134,193,.18);}
+.field select option{background:var(--navy);}
+.field textarea{resize:vertical;min-height:65px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fsec{font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:2px;color:var(--gray);margin:16px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.priority-select{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.priority-btn{padding:8px;border-radius:6px;border:2px solid var(--border);background:var(--input-bg);color:var(--gray);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;}
+.priority-btn:hover{border-color:var(--accent);color:var(--white);}
+.priority-btn.s-alta{border-color:var(--red);background:rgba(192,57,43,.15);color:#E74C3C;}
+.priority-btn.s-media{border-color:var(--yellow);background:rgba(243,156,18,.15);color:var(--yellow);}
+.priority-btn.s-baja{border-color:var(--green);background:rgba(30,132,73,.15);color:#27AE60;}
+.btn-reg{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;margin-top:8px;}
+.btn-reg:hover{background:#1a6fa3;transform:translateY(-1px);box-shadow:0 6px 20px rgba(46,134,193,.35);}
+.btn-clr{width:100%;padding:9px;background:transparent;color:var(--gray);border:1px solid var(--border);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;margin-top:8px;transition:all .2s;}
+.btn-clr:hover{color:var(--white);border-color:var(--gray);}
+.code-preview{background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);margin-top:-8px;margin-bottom:14px;}
+.code-preview span{color:var(--gray);}
+
+/* ── TABLE ── */
+.table-panel{padding:24px;overflow-x:auto;}
+.toolbar{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+.toolbar input{background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:8px 14px;color:var(--white);font-family:'Syne',sans-serif;font-size:13px;outline:none;flex:1;min-width:200px;max-width:280px;}
+.toolbar input:focus{border-color:var(--accent);}
+.filter-btn{padding:7px 13px;background:var(--tag-bg);border:1px solid var(--border);border-radius:20px;color:var(--gray);font-size:11px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.filter-btn:hover,.filter-btn.af{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-exp{margin-left:auto;padding:7px 15px;background:var(--tag-bg);color:var(--light-blue);border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all .2s;}
+.btn-exp:hover{background:var(--accent);color:#fff;}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:980px;}
+thead th{background:var(--tag-bg);color:var(--light-blue);font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:9px 10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+tbody tr:hover{background:rgba(46,134,193,.07);}
+tbody td{padding:9px 10px;color:var(--white);vertical-align:middle;}
+td.ell{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:600;white-space:nowrap;}
+.b-alta{background:rgba(192,57,43,.2);color:#E74C3C;border:1px solid rgba(192,57,43,.4);}
+.b-media{background:rgba(243,156,18,.2);color:#F39C12;border:1px solid rgba(243,156,18,.4);}
+.b-baja{background:rgba(30,132,73,.2);color:#27AE60;border:1px solid rgba(30,132,73,.4);}
+.b-sol{background:rgba(30,132,73,.15);color:#27AE60;border:1px solid rgba(30,132,73,.3);}
+.b-proc{background:rgba(46,134,193,.15);color:#5DADE2;border:1px solid rgba(46,134,193,.3);}
+.b-det{background:rgba(192,57,43,.15);color:#E74C3C;border:1px solid rgba(192,57,43,.3);}
+.b-apoyo{background:rgba(243,156,18,.15);color:#F39C12;border:1px solid rgba(243,156,18,.3);}
+.code-cell{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;font-size:11px;white-space:nowrap;}
+.mono-sm{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gray);}
+.dv{color:#27AE60;font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.da{color:var(--yellow);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.dn{color:#E67E22;font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.dr{color:#E74C3C;font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.row-new{animation:fadeIn .4s ease;}
+@keyframes fadeIn{from{opacity:0;background:rgba(46,134,193,.18);}to{opacity:1;}}
+.empty-state{text-align:center;padding:60px;color:var(--gray);}
+.empty-state .icon{font-size:48px;margin-bottom:16px;}
+.btn-act{background:none;border:1px solid var(--border);color:var(--gray);cursor:pointer;font-size:11px;font-family:'IBM Plex Mono',monospace;padding:4px 9px;border-radius:4px;transition:all .15s;white-space:nowrap;}
+.btn-act.edit{color:var(--accent);border-color:rgba(46,134,193,.4);}
+.btn-act.edit:hover{background:rgba(46,134,193,.12);color:var(--white);}
+.btn-act.del:hover{color:#E74C3C;border-color:rgba(192,57,43,.5);background:rgba(192,57,43,.08);}
+.acts{display:flex;gap:5px;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,12,22,.88);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .25s;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+.modal-overlay.open .modal{transform:translateY(0) scale(1);}
+.modal-header{padding:22px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;}
+.modal-header h3{font-size:16px;font-weight:800;}
+.modal-header .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gray);margin-top:3px;}
+.mcode{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);font-weight:600;margin-top:2px;}
+.modal-close{background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;padding:0 4px;transition:color .15s;}
+.modal-close:hover{color:var(--white);}
+.modal-body{padding:20px 24px;}
+.modal-footer{padding:0 24px 22px;display:flex;gap:10px;}
+.modal .field input,.modal .field select,.modal .field textarea{background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--white);font-family:'Syne',sans-serif;font-size:13px;width:100%;outline:none;}
+.modal .field input:focus,.modal .field select:focus,.modal .field textarea:focus{border-color:var(--accent);}
+.modal .field{margin-bottom:13px;}
+.modal .field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--light-blue);margin-bottom:5px;font-family:'IBM Plex Mono',monospace;}
+.modal .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sec-div{font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:2px;color:var(--gray);margin:18px 0 12px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.s-opt{padding:11px 13px;border-radius:8px;border:2px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all .2s;}
+.s-opt:hover{border-color:var(--accent);}
+.s-opt.selected{border-color:var(--accent);background:rgba(46,134,193,.15);}
+.s-opt.opt-sol.selected{border-color:#27AE60;background:rgba(30,132,73,.15);}
+.s-opt.opt-det.selected{border-color:#E74C3C;background:rgba(192,57,43,.12);}
+.s-opt.opt-apoyo.selected{border-color:var(--yellow);background:rgba(243,156,18,.12);}
+.s-label{font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
+.s-desc{font-size:10px;color:var(--gray);margin-top:2px;}
+.opt-proc .s-label{color:#5DADE2;} .opt-sol .s-label{color:#27AE60;} .opt-det .s-label{color:#E74C3C;} .opt-apoyo .s-label{color:var(--yellow);}
+.btn-save{flex:1;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;}
+.btn-save:hover{background:#1a6fa3;}
+.btn-cancel{padding:12px 20px;background:transparent;color:var(--gray);border:1px solid var(--border);border-radius:8px;font-family:'Syne',sans-serif;font-size:14px;cursor:pointer;transition:all .2s;}
+.btn-cancel:hover{color:var(--white);}
+.h-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.h-item:last-child{border-bottom:none;}
+.h-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.h-sol{background:#27AE60;} .h-proc{background:#5DADE2;} .h-det{background:#E74C3C;} .h-other{background:var(--gray);}
+.h-status{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;}
+.h-date{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gray);margin-top:1px;}
+.h-note{font-size:11px;color:#9ab;margin-top:2px;font-style:italic;}
+.no-hist{color:var(--gray);font-size:12px;font-style:italic;}
+
+/* ── ANALYTICS ── */
+.analytics-wrap{padding:28px 40px;}
+.period-bar{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+.period-bar label{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--gray);text-transform:uppercase;letter-spacing:1px;}
+.period-btn{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:var(--tag-bg);color:var(--gray);font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;transition:all .2s;}
+.period-btn:hover,.period-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.date-range{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.date-range input{background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--white);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;}
+.date-range input:focus{border-color:var(--accent);}
+.date-range span{color:var(--gray);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.btn-apply{padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;transition:all .2s;}
+.btn-apply:hover{background:#1a6fa3;}
+.period-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);background:rgba(46,134,193,.1);border:1px solid rgba(46,134,193,.3);border-radius:6px;padding:5px 12px;}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;}
+.kpi-card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:18px;}
+.kv{font-size:30px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1;}
+.kl{font-size:10px;color:var(--gray);margin-top:6px;text-transform:uppercase;letter-spacing:1px;}
+.ks{font-size:11px;margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+.chart-card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.chart-card h4{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--light-blue);margin-bottom:16px;}
+.donut-wrap{display:flex;align-items:center;gap:24px;}
+.donut{width:100px;height:100px;border-radius:50%;flex-shrink:0;}
+.donut-legend{display:flex;flex-direction:column;gap:8px;flex:1;}
+.leg-item{display:flex;align-items:center;gap:8px;font-size:11px;}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.leg-val{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.month-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.month-tbl th{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--light-blue);padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.month-tbl td{padding:8px 10px;border-bottom:1px solid rgba(44,78,106,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.month-tbl tr:last-child td{border-bottom:none;}
+.tasa-b{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--green);color:#fff;padding:13px 20px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(60px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:999;max-width:320px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.err{background:var(--red);}
+
+@media(max-width:900px){
+  .counter-grid{grid-template-columns:1fr 1fr;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .charts-row,.dash-row{grid-template-columns:1fr;}
+  .form-wrap{grid-template-columns:1fr;}
+  header{padding:0 16px;}
+  .date-badge,.header-right{display:none;}
+  .tabs{padding:0 16px;}
+  .analytics-wrap,.dash{padding:20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-icon">🛰</div>
+      <div class="logo-text">
+        <div class="company">Skysense</div>
+        <div class="subtitle">Gestión de Incidencias Operativas</div>
+      </div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="hstat accent"><div class="hn" id="hTotal">0</div><div class="hl">Tickets</div></div>
+    <div class="hstat blue"><div class="hn" id="hProc">0</div><div class="hl">En proceso</div></div>
+    <div class="hstat red"><div class="hn" id="hDet">0</div><div class="hl">Detenidos</div></div>
+    <div class="hstat green"><div class="hn" id="hSol">0</div><div class="hl">Solucionados</div></div>
+    <div class="hstat orange"><div class="hn" id="hAlta">0</div><div class="hl">Alta prior.</div></div>
+    <div class="date-badge" id="dateBadge"></div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dash',this)">🏠 Inicio</div>
+  <div class="tab" onclick="switchTab('form',this)">➕ Nueva Incidencia</div>
+  <div class="tab" onclick="switchTab('table',this)">📋 Registro</div>
+  <div class="tab" onclick="switchTab('analytics',this)">📊 Analítica</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="panel-dash" class="panel active">
+  <div class="dash">
+    <div class="dash-title">Resumen operativo — conteo informativo general</div>
+    <div class="counter-grid" id="counterGrid">
+      <div class="counter-card c-total">
+        <div class="icon-bg">📋</div>
+        <div class="cv" id="dc-total">0</div>
+        <div class="cl">Tickets totales</div>
+        <div class="cs" style="color:var(--gray)" id="dc-total-sub"></div>
+      </div>
+      <div class="counter-card c-proc">
+        <div class="icon-bg">⚙️</div>
+        <div class="cv" id="dc-proc">0</div>
+        <div class="cl">En proceso</div>
+        <div class="cs" style="color:#5DADE2" id="dc-proc-sub"></div>
+      </div>
+      <div class="counter-card c-det">
+        <div class="icon-bg">⏸️</div>
+        <div class="cv" id="dc-det">0</div>
+        <div class="cl">Detenidos</div>
+        <div class="cs" style="color:#E74C3C" id="dc-det-sub"></div>
+      </div>
+      <div class="counter-card c-sol">
+        <div class="icon-bg">✅</div>
+        <div class="cv" id="dc-sol">0</div>
+        <div class="cl">Solucionados</div>
+        <div class="cs" style="color:#27AE60" id="dc-sol-sub"></div>
+      </div>
+      <div class="counter-card c-alta">
+        <div class="icon-bg">🔴</div>
+        <div class="cv" id="dc-alta">0</div>
+        <div class="cl">Prioridad Alta</div>
+        <div class="cs" style="color:#E67E22" id="dc-alta-sub"></div>
+      </div>
+    </div>
+
+    <div class="quick-bar">
+      <button class="quick-btn primary" onclick="switchTab('form',document.querySelectorAll('.tab')[1])">➕ Nueva incidencia</button>
+      <button class="quick-btn" onclick="switchTab('table',document.querySelectorAll('.tab')[2])">📋 Ver todos los tickets</button>
+      <button class="quick-btn" onclick="switchTab('analytics',document.querySelectorAll('.tab')[3])">📊 Ver analítica</button>
+    </div>
+
+    <div class="dash-row">
+      <div class="dash-card">
+        <h3>⚠️ Tickets activos (En proceso + Detenidos)</h3>
+        <div class="recent-list" id="activeList"></div>
+      </div>
+      <div class="dash-card">
+        <h3>✅ Últimos resueltos</h3>
+        <div class="recent-list" id="solvedList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NUEVA INCIDENCIA -->
+<div id="panel-form" class="panel">
+  <div class="form-wrap">
+    <div class="form-panel">
+      <h2>Nueva incidencia</h2>
+      <div class="field">
+        <label>Código de ticket</label>
+        <div class="code-preview" id="codePreview"><span>Se asigna automáticamente al registrar</span></div>
+      </div>
+      <div class="fsec">Identificación</div>
+      <div class="field"><label>Cliente <span class="req">*</span></label>
+        <select id="f_cliente" onchange="updateCode()"><option value="">— Selecciona —</option><option>ASUR</option><option>OMA</option><option>Industria</option></select></div>
+      <div class="field"><label>Sitio <span class="req">*</span></label><input type="text" id="f_sitio" placeholder="Ej. FBO, HUX 02, Chihuahua..." oninput="updateCode()"></div>
+      <div class="field"><label>Sistema afectado <span class="req">*</span></label><input type="text" id="f_sistema" placeholder="Ej. HVAC, Rack 4, Baterías..."></div>
+      <div class="fsec">Clasificación</div>
+      <div class="field-row">
+        <div class="field"><label>Tipo de afectación</label>
+          <select id="f_afectacion"><option>Sin afectación</option><option>Parcial</option><option>Total</option><option>Afectación de equipo</option></select></div>
+        <div class="field"><label>Tipo de solución</label>
+          <select id="f_solucion"><option>En sitio</option><option>Remoto</option><option>Por determinar</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Estatus incidencia</label>
+          <select id="f_estatus"><option>En proceso</option><option>Detenido</option><option>Solucionada</option><option>Requiere apoyo de personal de sitio</option><option>Requiere visita de personal especializado</option></select></div>
+        <div class="field"><label>Estatus sistema</label>
+          <select id="f_estatus_sis"><option value="">—</option><option>Operativo</option><option>No operativo</option></select></div>
+      </div>
+      <div class="field"><label>Prioridad</label>
+        <div class="priority-select">
+          <button class="priority-btn" data-val="Alta" onclick="setPriority(this)">🔴 Alta</button>
+          <button class="priority-btn s-media" data-val="Media" onclick="setPriority(this)">🟡 Media</button>
+          <button class="priority-btn" data-val="Baja" onclick="setPriority(this)">🟢 Baja</button>
+        </div>
+        <input type="hidden" id="f_prioridad" value="Media">
+      </div>
+      <div class="fsec">Seguimiento</div>
+      <div class="field"><label>Persona encargada</label><input type="text" id="f_encargado" placeholder="Nombre del responsable"></div>
+      <div class="field-row">
+        <div class="field"><label>Fecha inicio <span class="req">*</span></label><input type="date" id="f_fecha_ini"></div>
+        <div class="field"><label>Fecha fin</label><input type="date" id="f_fecha_fin"></div>
+      </div>
+      <div class="field"><label>Acciones / Detalle</label><textarea id="f_detalle" placeholder="Descripción detallada..."></textarea></div>
+      <div class="field"><label>Observaciones</label><textarea id="f_obs" placeholder="Notas adicionales..." style="min-height:55px"></textarea></div>
+      <button class="btn-reg" onclick="registrar()">▶ REGISTRAR INCIDENCIA</button>
+      <button class="btn-clr" onclick="limpiar()">🗑 Limpiar formulario</button>
+    </div>
+    <div class="table-panel" id="formTablePanel">
+      <div style="padding:20px;color:var(--gray);font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:center;margin-top:60px;">
+        <div style="font-size:48px;margin-bottom:16px;">📝</div>
+        <div>Llena el formulario y presiona<br><strong style="color:var(--accent)">REGISTRAR INCIDENCIA</strong><br>para agregar un nuevo ticket.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTRO -->
+<div id="panel-table" class="panel">
+  <div class="table-panel">
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="🔍 Buscar código, cliente, sitio, sistema..." oninput="renderTabla()">
+      <button class="filter-btn af" data-f="all" onclick="setFilter('all',this)">Todos</button>
+      <button class="filter-btn" data-f="En proceso" onclick="setFilter('En proceso',this)">En proceso</button>
+      <button class="filter-btn" data-f="Detenido" onclick="setFilter('Detenido',this)">Detenidos</button>
+      <button class="filter-btn" data-f="Solucionada" onclick="setFilter('Solucionada',this)">Solucionadas</button>
+      <button class="filter-btn" data-f="Alta" onclick="setFilter('Alta',this)">Alta prioridad</button>
+      <button class="btn-exp" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Código</th><th>Cliente</th><th>Sitio</th><th>Sistema</th>
+        <th>Estatus</th><th>Sist.</th><th>Prioridad</th>
+        <th>Encargado</th><th>F.Inicio</th><th>F.Fin</th><th>Días</th><th>Detalle</th><th>Acciones</th>
+      </tr></thead>
+      <tbody id="incBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none"><div class="icon">📭</div><p>No hay incidencias que coincidan.</p></div>
+  </div>
+</div>
+
+<!-- ANALÍTICA -->
+<div id="panel-analytics" class="panel">
+  <div class="analytics-wrap">
+    <div class="period-bar">
+      <label>Período:</label>
+      <button class="period-btn" data-p="day" onclick="setPeriod('day',this)">Hoy</button>
+      <button class="period-btn" data-p="week" onclick="setPeriod('week',this)">Esta semana</button>
+      <button class="period-btn active" data-p="month" onclick="setPeriod('month',this)">Este mes</button>
+      <button class="period-btn" data-p="quarter" onclick="setPeriod('quarter',this)">Trimestre</button>
+      <button class="period-btn" data-p="year" onclick="setPeriod('year',this)">Este año</button>
+      <button class="period-btn" data-p="all" onclick="setPeriod('all',this)">Todo</button>
+      <div class="date-range">
+        <span>Del</span>
+        <input type="date" id="rangeFrom">
+        <span>al</span>
+        <input type="date" id="rangeTo">
+        <button class="btn-apply" onclick="applyRange()">Aplicar</button>
+      </div>
+      <div class="period-label" id="periodLabel">Este mes</div>
+    </div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="charts-row">
+      <div class="chart-card"><h4 id="periodChartTitle">Abiertos vs Resueltos</h4><div id="periodBars"></div></div>
+      <div class="chart-card"><h4>Distribución por estatus</h4>
+        <div class="donut-wrap"><div class="donut" id="donutEl"></div><div class="donut-legend" id="donutLeg"></div></div>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><h4>Por cliente</h4><div id="clienteBars"></div></div>
+      <div class="chart-card"><h4>Detalle por período</h4>
+        <table class="month-tbl"><thead><tr><th id="periodColLabel">Período</th><th>Abiertos</th><th>Resueltos</th><th>Tasa</th></tr></thead>
+        <tbody id="periodBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal" onclick="closeBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h3 id="mTitle">Actualizar incidencia</h3>
+        <div class="mcode" id="mCode"></div>
+        <div class="sub" id="mSub"></div>
+      </div>
+      <button class="modal-close" onclick="cerrarModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="sec-div">Cambiar estatus</div>
+      <div class="status-grid">
+        <div class="s-opt opt-proc" data-val="En proceso" onclick="pickStatus(this)">
+          <div class="s-label">🔵 En proceso</div><div class="s-desc">Atención activa en curso</div></div>
+        <div class="s-opt opt-sol" data-val="Solucionada" onclick="pickStatus(this)">
+          <div class="s-label">✅ Solucionada</div><div class="s-desc">Incidencia resuelta</div></div>
+        <div class="s-opt opt-det" data-val="Detenido" onclick="pickStatus(this)">
+          <div class="s-label">🔴 Detenido</div><div class="s-desc">En espera / bloqueado</div></div>
+        <div class="s-opt opt-apoyo" data-val="Requiere apoyo de personal de sitio" onclick="pickStatus(this)">
+          <div class="s-label">⚠️ Requiere apoyo</div><div class="s-desc">Necesita personal en sitio</div></div>
+      </div>
+      <div class="field"><label>Nota del cambio (opcional)</label>
+        <textarea id="m_nota" placeholder="Describe qué se hizo o por qué cambia el estatus..." style="min-height:55px"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Fecha fin (si aplica)</label><input type="date" id="m_fecha_fin"></div>
+        <div class="field"><label>Estatus sistema</label>
+          <select id="m_estatus_sis"><option value="">—</option><option>Operativo</option><option>No operativo</option></select></div>
+      </div>
+      <div class="sec-div">Editar datos</div>
+      <div class="field-row">
+        <div class="field"><label>Encargado</label><input type="text" id="m_encargado"></div>
+        <div class="field"><label>Prioridad</label>
+          <select id="m_prioridad"><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+      </div>
+      <div class="field"><label>Agregar al detalle</label>
+        <textarea id="m_detalle" placeholder="Se anexará al detalle existente..." style="min-height:55px"></textarea></div>
+      <div class="sec-div">Historial de cambios</div>
+      <div id="histList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarCambios()">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+const STORE = 'skysense_inc_v1';
+let inc = [], deletedIds = [], editId = null, selStatus = null, curFilter = 'all';
+let curPeriod = 'month', rangeFrom = null, rangeTo = null;
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f_fecha_ini').value = tod();
+  document.getElementById('dateBadge').textContent = new Date().toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('rangeFrom').value = firstOfMonth();
+  document.getElementById('rangeTo').value = tod();
+  load();
+  if (!inc.length) seed();
+  updateAll();
+  updateCode();
+});
+
+function tod() { return new Date().toISOString().split('T')[0]; }
+function firstOfMonth() { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-01`; }
+
+// ── PERSISTENCE ──
+function load() {
+  try {
+    const r = JSON.parse(localStorage.getItem(STORE)||'{}');
+    inc = r.rows || [];
+    deletedIds = r.deletedIds || [];
+  } catch { inc = []; deletedIds = []; }
+}
+function save() { localStorage.setItem(STORE, JSON.stringify({rows:inc, deletedIds})); }
+
+// ── TICKET CODE ──
+// Code = SKY-CLIENTE-NNNNN (e.g. SKY-ASUR-00042)
+function makeCode(cliente, id) {
+  const cl = (cliente||'GEN').substring(0,4).toUpperCase();
+  return `SKY-${cl}-${String(id).padStart(5,'0')}`;
+}
+
+// Next available ID: reuse smallest deleted if any, otherwise increment from max
+function nextAvailableId() {
+  if (deletedIds.length > 0) {
+    deletedIds.sort((a,b)=>a-b);
+    return deletedIds[0]; // lowest recycled ID
+  }
+  const maxId = inc.length > 0 ? Math.max(...inc.map(r=>r.id)) : 0;
+  return maxId + 1;
+}
+
+function updateCode() {
+  const cl = document.getElementById('f_cliente').value;
+  const nid = nextAvailableId();
+  const preview = document.getElementById('codePreview');
+  if (!cl) { preview.innerHTML = '<span>Selecciona un cliente para ver el código</span>'; return; }
+  preview.textContent = makeCode(cl, nid);
+}
+
+// ── SEED ──
+function seed() {
+  const d=[
+    [1,'Industria','Alysa','Baterías','Sin afectación','Remoto','Solucionada','Operativo','','','2026-03-07','2026-03-07',0,'Sistema en OFF. Se inicia prueba manual, regresa a operar normal.'],
+    [2,'ASUR','HUX 02','ITM','Total','En sitio','En proceso','No operativo','Alta','','2026-02-18','',44,'Interruptor principal se votó. Se requiere cambiar ITM.'],
+    [3,'OMA','Chihuahua','Baterías','Afectación de equipo','En sitio','En proceso','Operativo','Media','','2026-01-23','',70,'Temperaturas elevadas, HMI con botón de equipos auxiliares sin funcionar.'],
+    [4,'ASUR','PTAR','HVAC','Afectación de equipo','En sitio','En proceso','Operativo','Alta','','2026-01-12','',81,'Cada mañana ~40°C, HVAC no opera automáticamente, se enciende manual.'],
+    [5,'ASUR','Almacén General','HMI','Sin afectación','En sitio','En proceso','','Media','','2025-12-24','',100,'Sin gráfica desde enero, requiere revisión de HMI.'],
+    [6,'ASUR','Zihuatanejo','Rack 4','Parcial','En sitio','En proceso','','Media','','2025-12-22','',102,'Se desenclavó el rack 4.'],
+    [7,'ASUR','Acapulco','Rack 4','Parcial','En sitio','Detenido','','Alta','','2025-08-23','',223,'Rack 4 inhabilitado por alarma "Dry contact".'],
+    [8,'ASUR','Almacén General','Gotera de Agua','Sin afectación','En sitio','Detenido','','Media','','2025-07-09','',268,'Gotera en subestación. Requiere permiso previo.'],
+    [9,'ASUR','Alpha','HVAC / FSS','Afectación de equipo','En sitio','Detenido','','Alta','','2025-06-08','',299,'HVAC 2 fuera de operación. Garantía de sensor de humedad.'],
+    [10,'ASUR','BHS','HVAC 1','Afectación de equipo','En sitio','Detenido','','Media','','2025-05-09','',329,'Garantía de compresor para HVAC 1.'],
+    [11,'ASUR','BHS','HVAC 2','Afectación de equipo','En sitio','Detenido','','Media','','2025-03-28','',378,'Garantía de bobina de HVAC 2, sin continuidad.'],
+    [12,'ASUR','FBO','Rack 1','Afectación de equipo','En sitio','En proceso','','Alta','','2026-03-19','',13,'Fallo en sensor de corriente.'],
+    [13,'ASUR','FBO','HVAC','Afectación de equipo','En sitio','Detenido','','Alta','','2026-03-19','',13,'Condensación excesiva causó humedad en rack 1.'],
+    [14,'ASUR','FBO','FSS','Afectación de equipo','En sitio','Detenido','','Alta','','2025-02-20','',477,'FSS desarmado del sistema BESS.'],
+    [15,'OMA','CD Juárez','Fuera de Operación','Total','En sitio','Detenido','','Alta','','2026-04-22','',13,'Sistema no descarga, fuera de operación.'],
+    [16,'OMA','Monterrey B1','Módulos Narada','Parcial','En sitio','Detenido','','Media','','2026-04-29','',6,'Módulos Narada necesitan entrar en garantía.'],
+    [17,'OMA','Monterrey B3','Rack 4 B3','Total','En sitio','Detenido','','Alta','','2026-04-29','',6,'Rack 4 del BESS 3 fuera de operación.'],
+    [18,'Industria','Tejidos y texturizados','HMI','Sin afectación','En sitio','En proceso','','Baja','','2026-03-06','',51,'Descarga configurada a 225kW pero opera a 192kW o menos.'],
+    [19,'Industria','DISEKO','Anomalía BESS','Sin afectación','En sitio','En proceso','','Media','','2026-03-10','',47,'BESS se detiene ~1.5 min durante descarga sin alarmas.'],
+    [20,'Industria','Bocar','Desfase calendario','Sin afectación','En sitio','Solucionada','','Media','','2026-03-25','2026-04-20',26,'Descarga inicia en horario diferente al calendario.'],
+    [21,'Industria','THOR B2','Display controlador','Sin afectación','En sitio','En proceso','','Media','','2026-04-10','',21,'Display dañado por humedad/agua de lluvia.'],
+    [22,'ASUR','Veracruz','Rack 2','Parcial','En sitio','En proceso','','Media','','2026-04-14','',21,'Alta temperatura en rack 2, requiere mantenimiento al chiller.'],
+  ];
+  inc = d.map(r=>({
+    id:r[0], code:makeCode(r[1],r[0]),
+    cliente:r[1],sitio:r[2],sistema:r[3],afectacion:r[4],solucion:r[5],
+    estatus:r[6],estatus_sis:r[7],prioridad:r[8],encargado:r[9],
+    fecha_ini:r[10],fecha_fin:r[11],dias:r[12],detalle:r[13],obs:'',
+    historial:[{estatus:r[6],fecha:r[6]==='Solucionada'?(r[11]||r[10]):r[10],nota:'Registro inicial'}]
+  }));
+  deletedIds = [];
+  save();
+}
+
+// ── TABS ──
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (tab==='table') renderTabla();
+  if (tab==='analytics') renderAnalytics();
+  if (tab==='dash') renderDash();
+  if (tab==='form') updateCode();
+}
+
+// ── PRIORITY ──
+function setPriority(btn) {
+  document.querySelectorAll('.priority-btn').forEach(b=>b.className='priority-btn');
+  btn.classList.add('s-'+btn.dataset.val.toLowerCase());
+  document.getElementById('f_prioridad').value=btn.dataset.val;
+}
+
+// ── REGISTER ──
+function registrar() {
+  const cl=v('f_cliente'),si=v('f_sitio'),sys=v('f_sistema'),fi=v('f_fecha_ini');
+  if(!cl){toast('Selecciona un Cliente',1);return;}
+  if(!si){toast('Ingresa el Sitio',1);return;}
+  if(!sys){toast('Ingresa el Sistema afectado',1);return;}
+  if(!fi){toast('Ingresa la Fecha de inicio',1);return;}
+
+  const nid = nextAvailableId();
+  // Remove from deletedIds if we're reusing one
+  deletedIds = deletedIds.filter(x=>x!==nid);
+
+  const ff=v('f_fecha_fin'), est=v('f_estatus');
+  const row={
+    id:nid, code:makeCode(cl,nid),
+    cliente:cl,sitio:si,sistema:sys,
+    afectacion:v('f_afectacion'),solucion:v('f_solucion'),estatus:est,
+    estatus_sis:v('f_estatus_sis'),prioridad:v('f_prioridad'),encargado:v('f_encargado'),
+    fecha_ini:fi,fecha_fin:ff,dias:calcDias(fi,ff),
+    detalle:v('f_detalle'),obs:v('f_obs'),
+    historial:[{estatus:est,fecha:fi,nota:'Registro inicial'}],
+    _new:true
+  };
+  inc.push(row); save(); updateAll();
+  toast('✅ '+row.code+' registrado — '+cl+' / '+si);
+  setTimeout(()=>{
+    switchTab('table',document.querySelectorAll('.tab')[2]);
+    setTimeout(()=>{ const nr=document.querySelector('.row-new'); if(nr)nr.scrollIntoView({behavior:'smooth',block:'center'}); },100);
+  },700);
+  limpiar(false);
+}
+
+function calcDias(fi,ff){ if(!fi)return 0; return Math.max(0,Math.round((new Date((ff||tod())+'T00:00:00')-new Date(fi+'T00:00:00'))/86400000)); }
+function v(id){ return (document.getElementById(id).value||'').trim(); }
+
+// ── CLEAR FORM ──
+function limpiar(notify=true){
+  ['f_sitio','f_sistema','f_encargado','f_detalle','f_obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_cliente').value='';
+  document.getElementById('f_afectacion').value='Sin afectación';
+  document.getElementById('f_solucion').value='En sitio';
+  document.getElementById('f_estatus').value='En proceso';
+  document.getElementById('f_estatus_sis').value='';
+  document.getElementById('f_fecha_ini').value=tod();
+  document.getElementById('f_fecha_fin').value='';
+  document.querySelectorAll('.priority-btn').forEach(b=>b.className='priority-btn');
+  document.querySelector('[data-val="Media"]').classList.add('s-media');
+  document.getElementById('f_prioridad').value='Media';
+  updateCode();
+  if(notify)toast('Formulario limpiado');
+}
+
+// ── UPDATE ALL ──
+function updateAll() { updateHeaderStats(); renderDash(); }
+
+function updateHeaderStats() {
+  const t=inc.length;
+  const proc=inc.filter(r=>r.estatus==='En proceso').length;
+  const det=inc.filter(r=>r.estatus==='Detenido').length;
+  const sol=inc.filter(r=>r.estatus==='Solucionada').length;
+  const alta=inc.filter(r=>r.prioridad==='Alta'&&r.estatus!=='Solucionada').length;
+  document.getElementById('hTotal').textContent=t;
+  document.getElementById('hProc').textContent=proc;
+  document.getElementById('hDet').textContent=det;
+  document.getElementById('hSol').textContent=sol;
+  document.getElementById('hAlta').textContent=alta;
+}
+
+// ── DASHBOARD ──
+function renderDash() {
+  const t=inc.length;
+  const proc=inc.filter(r=>r.estatus==='En proceso').length;
+  const det=inc.filter(r=>r.estatus==='Detenido').length;
+  const sol=inc.filter(r=>r.estatus==='Solucionada').length;
+  const alta=inc.filter(r=>r.prioridad==='Alta').length;
+  const activas=proc+det;
+  const tasa=t?Math.round(sol/t*100):0;
+
+  document.getElementById('dc-total').textContent=t;
+  document.getElementById('dc-total-sub').textContent=`${activas} activas · ${tasa}% resueltas`;
+  document.getElementById('dc-proc').textContent=proc;
+  document.getElementById('dc-proc-sub').textContent=proc===1?'ticket en atención':`tickets en atención`;
+  document.getElementById('dc-det').textContent=det;
+  document.getElementById('dc-det-sub').textContent=det===1?'ticket bloqueado':`tickets bloqueados`;
+  document.getElementById('dc-sol').textContent=sol;
+  document.getElementById('dc-sol-sub').textContent=`${tasa}% del total`;
+  document.getElementById('dc-alta').textContent=alta;
+  document.getElementById('dc-alta-sub').textContent=alta>0?`${inc.filter(r=>r.prioridad==='Alta'&&r.estatus==='Detenido').length} detenidos`:'Sin críticos';
+
+  // Active tickets (proceso + detenido), sorted by dias desc
+  const active=inc.filter(r=>r.estatus!=='Solucionada').sort((a,b)=>b.dias-a.dias).slice(0,8);
+  document.getElementById('activeList').innerHTML = active.length ? active.map(r=>`
+    <div class="recent-item" onclick="abrirModal(${r.id})">
+      <div class="ri-code">${r.code}</div>
+      <div class="ri-info"><div class="ri-site">${e(r.sitio)} <span style="font-weight:400;color:var(--gray)">· ${e(r.cliente)}</span></div><div class="ri-sys">${e(r.sistema)}</div></div>
+      <div class="ri-badge">${bEst(r.estatus)}</div>
+      <div class="ri-days ${r.dias>90?'dr':r.dias>30?'dn':r.dias>7?'da':'dv'}">${r.dias}d</div>
+    </div>`).join('') : '<div style="color:var(--gray);font-size:12px;padding:12px;text-align:center">¡Sin tickets activos! 🎉</div>';
+
+  // Last resolved
+  const solved=inc.filter(r=>r.estatus==='Solucionada').sort((a,b)=>(b.fecha_fin||'').localeCompare(a.fecha_fin||'')).slice(0,6);
+  document.getElementById('solvedList').innerHTML = solved.length ? solved.map(r=>`
+    <div class="recent-item">
+      <div class="ri-code">${r.code}</div>
+      <div class="ri-info"><div class="ri-site">${e(r.sitio)} <span style="font-weight:400;color:var(--gray)">· ${e(r.cliente)}</span></div><div class="ri-sys">${e(r.sistema)}</div></div>
+      <div class="ri-badge"><span class="badge b-sol">✅ Solucionada</span></div>
+      <div class="ri-days" style="color:var(--gray)">${fd(r.fecha_fin)}</div>
+    </div>`).join('') : '<div style="color:var(--gray);font-size:12px;padding:12px;text-align:center">Sin tickets resueltos aún.</div>';
+}
+
+// ── TABLE ──
+function renderTabla() {
+  const srch=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const tbody=document.getElementById('incBody');
+  tbody.innerHTML='';
+  let fil=inc.filter(r=>{
+    const ok=curFilter==='all'||(curFilter==='Alta'?r.prioridad==='Alta':r.estatus===curFilter);
+    const ms=!srch||[r.code,r.cliente,r.sitio,r.sistema,r.detalle||'',r.encargado||''].join(' ').toLowerCase().includes(srch);
+    return ok&&ms;
+  });
+  document.getElementById('emptyState').style.display=fil.length===0?'block':'none';
+  fil.slice().reverse().forEach(r=>{
+    const tr=document.createElement('tr');
+    if(r._new){tr.classList.add('row-new');delete r._new;}
+    const dc=r.dias<=7?'dv':r.dias<=30?'da':r.dias<=90?'dn':'dr';
+    tr.innerHTML=`
+      <td class="code-cell">${r.code}</td>
+      <td><strong>${e(r.cliente)}</strong></td>
+      <td>${e(r.sitio)}</td>
+      <td class="ell">${e(r.sistema)}</td>
+      <td>${bEst(r.estatus)}</td>
+      <td class="mono-sm">${r.estatus_sis||'—'}</td>
+      <td>${bPri(r.prioridad)}</td>
+      <td class="mono-sm ell">${e(r.encargado||'—')}</td>
+      <td class="mono-sm">${fd(r.fecha_ini)}</td>
+      <td class="mono-sm">${fd(r.fecha_fin)}</td>
+      <td class="${dc}">${r.dias}d</td>
+      <td class="ell" style="font-size:11px;color:#9ab;max-width:130px" title="${e(r.detalle||'')}">${e((r.detalle||'').substring(0,45))}${(r.detalle||'').length>45?'…':''}</td>
+      <td><div class="acts">
+        <button class="btn-act edit" onclick="abrirModal(${r.id})">✏️ Actualizar</button>
+        <button class="btn-act del" onclick="eliminar(${r.id})">✕</button>
+      </div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function bPri(p){if(!p)return'—';const c=p==='Alta'?'b-alta':p==='Media'?'b-media':'b-baja';return`<span class="badge ${c}">${p}</span>`;}
+function bEst(s){if(!s)return'—';const c=s==='Solucionada'?'b-sol':s==='En proceso'?'b-proc':s==='Detenido'?'b-det':'b-apoyo';const l=s.replace('Requiere apoyo de personal de sitio','Req. apoyo').replace('Requiere visita de personal especializado','Req. visita');return`<span class="badge ${c}" title="${e(s)}">${l.substring(0,22)}</span>`;}
+function fd(d){if(!d)return'—';try{return new Date(d+'T00:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return d;}}
+
+// ── FILTER ──
+function setFilter(f,el){
+  curFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('af'));
+  el.classList.add('af');
+  renderTabla();
+}
+
+// ── DELETE — recycles ID ──
+function eliminar(id) {
+  if(!confirm('¿Eliminar este ticket? El ID quedará disponible para reutilizarse.'))return;
+  inc=inc.filter(r=>r.id!==id);
+  deletedIds.push(id); // make ID available again
+  save(); updateAll(); renderTabla(); updateCode();
+  toast('Ticket eliminado — ID #'+id+' disponible para reutilizar');
+}
+
+// ── MODAL ──
+function abrirModal(id){
+  const r=inc.find(x=>x.id===id); if(!r)return;
+  editId=id; selStatus=r.estatus;
+  document.getElementById('mTitle').textContent='Actualizar — '+r.sitio;
+  document.getElementById('mCode').textContent=r.code;
+  document.getElementById('mSub').textContent=r.cliente+' · '+r.sistema;
+  document.getElementById('m_encargado').value=r.encargado||'';
+  document.getElementById('m_prioridad').value=r.prioridad||'Media';
+  document.getElementById('m_detalle').value='';
+  document.getElementById('m_nota').value='';
+  document.getElementById('m_estatus_sis').value=r.estatus_sis||'';
+  document.getElementById('m_fecha_fin').value=r.fecha_fin||'';
+  document.querySelectorAll('.s-opt').forEach(o=>{o.classList.remove('selected');if(o.dataset.val===r.estatus)o.classList.add('selected');});
+  renderHist(r);
+  document.getElementById('editModal').classList.add('open');
+}
+function pickStatus(el){document.querySelectorAll('.s-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');selStatus=el.dataset.val;}
+function closeBg(e){if(e.target===document.getElementById('editModal'))cerrarModal();}
+function cerrarModal(){document.getElementById('editModal').classList.remove('open');editId=null;selStatus=null;}
+
+function guardarCambios(){
+  const r=inc.find(x=>x.id===editId); if(!r)return;
+  const nota=document.getElementById('m_nota').value.trim();
+  const nuevoEst=selStatus||r.estatus;
+  const encargado=document.getElementById('m_encargado').value.trim();
+  const prioridad=document.getElementById('m_prioridad').value;
+  const detalleAdd=document.getElementById('m_detalle').value.trim();
+  const fechaFin=document.getElementById('m_fecha_fin').value;
+  const estSis=document.getElementById('m_estatus_sis').value;
+  if(!r.historial)r.historial=[];
+  if(nuevoEst!==r.estatus||nota){
+    r.historial.push({estatus:nuevoEst,fecha:tod(),
+      nota:nota||(nuevoEst!==r.estatus?'Cambio de "'+r.estatus+'" a "'+nuevoEst+'"':'Actualización')});
+  }
+  r.estatus=nuevoEst;
+  if(encargado)r.encargado=encargado;
+  r.prioridad=prioridad; r.estatus_sis=estSis;
+  if(detalleAdd)r.detalle=(r.detalle?r.detalle+'\n— '+tod()+': '+detalleAdd:detalleAdd);
+  if(fechaFin){r.fecha_fin=fechaFin;r.dias=calcDias(r.fecha_ini,fechaFin);}
+  else if(nuevoEst==='Solucionada'&&!r.fecha_fin){r.fecha_fin=tod();r.dias=calcDias(r.fecha_ini,tod());}
+  else{r.dias=calcDias(r.fecha_ini,r.fecha_fin);}
+  save(); updateAll(); renderTabla(); cerrarModal();
+  toast('✅ '+r.code+' → '+nuevoEst);
+}
+
+function renderHist(r){
+  const list=document.getElementById('histList');
+  const h=r.historial||[];
+  if(!h.length){list.innerHTML='<div class="no-hist">Sin historial de cambios.</div>';return;}
+  list.innerHTML=h.slice().reverse().map(x=>{
+    const dc=x.estatus==='Solucionada'?'h-sol':x.estatus==='En proceso'?'h-proc':x.estatus==='Detenido'?'h-det':'h-other';
+    return`<div class="h-item"><div class="h-dot ${dc}"></div><div>
+      <div class="h-status">${bEst(x.estatus)}</div>
+      <div class="h-date">${fd(x.fecha)}</div>
+      ${x.nota?`<div class="h-note">${e(x.nota)}</div>`:''}
+    </div></div>`;
+  }).join('');
+}
+
+// ── ANALYTICS ──
+let customFrom=null, customTo=null;
+
+function setPeriod(p,el){
+  curPeriod=p; customFrom=null; customTo=null;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderAnalytics();
+}
+
+function applyRange(){
+  const f=document.getElementById('rangeFrom').value;
+  const t=document.getElementById('rangeTo').value;
+  if(!f||!t){toast('Selecciona ambas fechas',1);return;}
+  curPeriod='custom'; customFrom=f; customTo=t;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  renderAnalytics();
+}
+
+function getPeriodBounds(){
+  const now=new Date(); const y=now.getFullYear(); const m=now.getMonth();
+  if(curPeriod==='custom'&&customFrom&&customTo) return {from:customFrom,to:customTo,label:`${fd(customFrom)} – ${fd(customTo)}`,granularity:'day'};
+  if(curPeriod==='day'){
+    const t=tod(); return{from:t,to:t,label:'Hoy — '+fd(t),granularity:'hour'};
+  }
+  if(curPeriod==='week'){
+    const d=new Date(now); d.setDate(d.getDate()-d.getDay());
+    const f=d.toISOString().split('T')[0];
+    return{from:f,to:tod(),label:'Esta semana',granularity:'day'};
+  }
+  if(curPeriod==='month'){
+    const f=`${y}-${String(m+1).padStart(2,'0')}-01`;
+    return{from:f,to:tod(),label:'Este mes ('+now.toLocaleDateString('es-MX',{month:'long',year:'numeric'})+')',granularity:'day'};
+  }
+  if(curPeriod==='quarter'){
+    const qm=Math.floor(m/3)*3;
+    const f=`${y}-${String(qm+1).padStart(2,'0')}-01`;
+    return{from:f,to:tod(),label:'Trimestre actual',granularity:'week'};
+  }
+  if(curPeriod==='year'){
+    return{from:`${y}-01-01`,to:`${y}-12-31`,label:'Año '+y,granularity:'month'};
+  }
+  // all
+  const minDate=inc.length?inc.map(r=>r.fecha_ini).filter(Boolean).sort()[0]:'2024-01-01';
+  return{from:minDate,to:tod(),label:'Todo el historial',granularity:'month'};
+}
+
+function inRange(date,from,to){
+  if(!date)return false;
+  return date>=from&&date<=to;
+}
+
+function renderAnalytics(){
+  const bounds=getPeriodBounds();
+  document.getElementById('periodLabel').textContent=bounds.label;
+
+  // Filter inc to period (opened OR closed in period)
+  const inPeriod=inc.filter(r=>inRange(r.fecha_ini,bounds.from,bounds.to)||inRange(r.fecha_fin,bounds.from,bounds.to));
+  const opened=inc.filter(r=>inRange(r.fecha_ini,bounds.from,bounds.to));
+  const resolved=inc.filter(r=>inRange(r.fecha_fin,bounds.from,bounds.to)&&r.estatus==='Solucionada');
+
+  const total=inPeriod.length;
+  const sol=resolved.length;
+  const tasa=opened.length?Math.round(sol/opened.length*100):0;
+  const avg=inPeriod.length?Math.round(inPeriod.reduce((s,r)=>s+r.dias,0)/inPeriod.length):0;
+
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi-card"><div class="kv" style="color:var(--accent)">${opened.length}</div><div class="kl">Abiertos en período</div></div>
+    <div class="kpi-card"><div class="kv" style="color:#27AE60">${sol}</div><div class="kl">Resueltos en período</div><div class="ks" style="color:#27AE60">${tasa}% tasa</div></div>
+    <div class="kpi-card"><div class="kv" style="color:#E74C3C">${inc.filter(r=>r.estatus!=='Solucionada').length}</div><div class="kl">Tickets abiertos hoy</div></div>
+    <div class="kpi-card"><div class="kv" style="color:#F39C12">${avg}d</div><div class="kl">Promedio días (período)</div></div>
+    <div class="kpi-card"><div class="kv" style="color:#E67E22">${inPeriod.filter(r=>r.prioridad==='Alta').length}</div><div class="kl">Alta prioridad (período)</div></div>
+  `;
+
+  // Build time buckets based on granularity
+  const buckets = buildBuckets(bounds);
+  document.getElementById('periodChartTitle').textContent = `Abiertos vs Resueltos — ${bounds.label}`;
+  document.getElementById('periodColLabel').textContent = bounds.granularity==='day'?'Día':bounds.granularity==='week'?'Semana':'Mes';
+
+  const maxB=Math.max(...buckets.map(b=>Math.max(b.ab,b.re)),1);
+  document.getElementById('periodBars').innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto">
+    ${buckets.filter(b=>b.ab>0||b.re>0).map(b=>`<div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gray);margin-bottom:3px">${b.label}</div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:58px;font-size:10px;color:#5DADE2;font-family:'IBM Plex Mono',monospace;text-align:right">Abiertos</div>
+          <div style="flex:1;background:var(--input-bg);border-radius:3px;height:16px;overflow:hidden">
+            <div style="width:${b.ab/maxB*100}%;background:#2E86C1;height:100%;border-radius:3px;display:flex;align-items:center;padding-left:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#fff;min-width:${b.ab?16:0}px">${b.ab||''}</div>
+          </div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gray);width:20px;text-align:right">${b.ab}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:58px;font-size:10px;color:#27AE60;font-family:'IBM Plex Mono',monospace;text-align:right">Resueltos</div>
+          <div style="flex:1;background:var(--input-bg);border-radius:3px;height:16px;overflow:hidden">
+            <div style="width:${b.re/maxB*100}%;background:#1E8449;height:100%;border-radius:3px;display:flex;align-items:center;padding-left:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#fff;min-width:${b.re?16:0}px">${b.re||''}</div>
+          </div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gray);width:20px;text-align:right">${b.re}</span>
+        </div>
+      </div>
+    </div>`).join('')||'<div style="color:var(--gray);font-size:12px;padding:20px;text-align:center">Sin datos en este período.</div>'}
+  </div>`;
+
+  // Period detail table
+  document.getElementById('periodBody').innerHTML=buckets.filter(b=>b.ab>0||b.re>0).map(b=>{
+    const t=b.ab>0?Math.round(b.re/b.ab*100):0;
+    const co=t>=80?'#27AE60':t>=50?'#F39C12':'#E74C3C';
+    return`<tr>
+      <td style="color:var(--white);font-weight:600">${b.label}</td>
+      <td style="color:#5DADE2">${b.ab}</td><td style="color:#27AE60">${b.re}</td>
+      <td><span class="tasa-b" style="background:${co}22;color:${co};border:1px solid ${co}44">${t}%</span></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="4" style="color:var(--gray);font-style:italic;text-align:center;padding:16px">Sin datos en este período.</td></tr>';
+
+  // Donut (all current)
+  const cnt={};
+  inc.forEach(r=>{cnt[r.estatus]=(cnt[r.estatus]||0)+1;});
+  const cols={'Solucionada':'#27AE60','En proceso':'#2E86C1','Detenido':'#C0392B','Requiere apoyo de personal de sitio':'#F39C12','Requiere visita de personal especializado':'#E67E22'};
+  const dd=Object.entries(cnt).map(([k,val])=>({k,val,c:cols[k]||'#6C757D'}));
+  const dt=dd.reduce((s,d)=>s+d.val,0)||1;
+  let pct=0;
+  const parts=dd.map(d=>{const p=d.val/dt*100;const pt=`${d.c} ${pct.toFixed(1)}% ${(pct+p).toFixed(1)}%`;pct+=p;return pt;});
+  document.getElementById('donutEl').style.background=`conic-gradient(${parts.join(',')})`;
+  document.getElementById('donutLeg').innerHTML=dd.map(d=>`
+    <div class="leg-item"><div class="leg-dot" style="background:${d.c}"></div>
+    <span>${d.k.replace('Requiere apoyo de personal de sitio','Req. apoyo').replace('Requiere visita de personal especializado','Req. visita').substring(0,22)}</span>
+    <span class="leg-val" style="color:${d.c}">${d.val}</span></div>`).join('');
+
+  // Client bars (period)
+  const cc={};
+  opened.forEach(r=>{cc[r.cliente]=(cc[r.cliente]||0)+1;});
+  const maxC=Math.max(...Object.values(cc),1);
+  const cco={ASUR:'#2E86C1',OMA:'#27AE60',Industria:'#F39C12'};
+  document.getElementById('clienteBars').innerHTML=Object.keys(cc).length?
+    `<div style="display:flex;flex-direction:column;gap:10px">
+      ${Object.entries(cc).sort((a,b)=>b[1]-a[1]).map(([k,val])=>`
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:70px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gray);text-align:right">${k}</div>
+          <div style="flex:1;background:var(--input-bg);border-radius:4px;height:22px;overflow:hidden">
+            <div style="width:${val/maxC*100}%;background:${cco[k]||'#2E86C1'};height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#fff;font-weight:600">${val}</div>
+          </div><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gray);width:24px">${val}</span>
+        </div>`).join('')}
+    </div>`:'<div style="color:var(--gray);font-size:12px;padding:16px;text-align:center">Sin datos en este período.</div>';
+}
+
+function buildBuckets(bounds){
+  const {from,to,granularity}=bounds;
+  const buckets=[];
+  const cur=new Date(from+'T00:00:00');
+  const end=new Date(to+'T00:00:00');
+
+  if(granularity==='day'){
+    while(cur<=end){
+      const key=cur.toISOString().split('T')[0];
+      const label=cur.toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'});
+      const ab=inc.filter(r=>r.fecha_ini===key).length;
+      const re=inc.filter(r=>r.fecha_fin===key&&r.estatus==='Solucionada').length;
+      buckets.push({label,key,ab,re});
+      cur.setDate(cur.getDate()+1);
+    }
+  } else if(granularity==='week'){
+    // group by ISO week
+    const weeks={};
+    inc.forEach(r=>{
+      if(r.fecha_ini>=from&&r.fecha_ini<=to){const wk=getWeekKey(r.fecha_ini);weeks[wk]=weeks[wk]||{ab:0,re:0};weeks[wk].ab++;}
+      if(r.fecha_fin>=from&&r.fecha_fin<=to&&r.estatus==='Solucionada'){const wk=getWeekKey(r.fecha_fin);weeks[wk]=weeks[wk]||{ab:0,re:0};weeks[wk].re++;}
+    });
+    Object.entries(weeks).sort(([a],[b])=>a.localeCompare(b)).forEach(([k,v])=>buckets.push({label:'Sem '+k,key:k,...v}));
+  } else {
+    // month
+    const months={};
+    inc.forEach(r=>{
+      if(r.fecha_ini&&r.fecha_ini>=from&&r.fecha_ini<=to){const mk=r.fecha_ini.substring(0,7);months[mk]=months[mk]||{ab:0,re:0};months[mk].ab++;}
+      if(r.fecha_fin&&r.fecha_fin>=from&&r.fecha_fin<=to&&r.estatus==='Solucionada'){const mk=r.fecha_fin.substring(0,7);months[mk]=months[mk]||{ab:0,re:0};months[mk].re++;}
+    });
+    Object.entries(months).sort(([a],[b])=>a.localeCompare(b)).forEach(([k,v])=>{
+      const d=new Date(k+'-01');
+      buckets.push({label:d.toLocaleDateString('es-MX',{month:'short',year:'2-digit'}),key:k,...v});
+    });
+  }
+  return buckets;
+}
+
+function getWeekKey(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const jan1=new Date(d.getFullYear(),0,1);
+  const wk=Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
+  return `${d.getFullYear()}-W${String(wk).padStart(2,'0')}`;
+}
+
+// ── EXPORT ──
+function exportCSV(){
+  const h=['Código','ID','Cliente','Sitio','Sistema','Afectación','Solución','Estatus','Est.Sistema','Prioridad','Encargado','F.Inicio','F.Fin','Días','Detalle'];
+  const rows=inc.map(r=>[r.code,r.id,r.cliente,r.sitio,r.sistema,r.afectacion,r.solucion,r.estatus,r.estatus_sis,r.prioridad,r.encargado,r.fecha_ini,r.fecha_fin,r.dias,`"${(r.detalle||'').replace(/"/g,'""')}"`]);
+  const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='Skysense_Incidencias_'+tod()+'.csv'; a.click();
+  toast('CSV exportado');
+}
+
+// ── TOAST ──
+function toast(msg,err=0){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(err?' err':'')+' show';
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3400);
+}
+</script>
+</body>
+</html>
